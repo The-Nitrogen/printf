@@ -1,34 +1,53 @@
 #include "main.h"
 
+void printf_buffer(char buffer[], int *printf_ind);
+
 /**
- * _printf - implementation of the inbuilt printf
- * @format: the format specifier
- * Return: the formated string
+ * my_printf - Printf function
+ * @format: format.
+ * Return: Printed chars.
  */
-
-int _printf(const char *format, ...)
+int my_printf(const char *format, ...)
 {
-	int printed = 0;
+	int i, printed = 0, printed_count = 0;
+	int flags, width, precision, size, printf_ind = 0;
+	va_list list;
+	char buffer[BUFF_SIZE];
 
-	va_list args;
+	if (format == NULL)
+		return (-1);
 
-	va_start(args, format);
+	va_start(list, format);
 
-	while (*format != '\0')
+	for (i = 0; format && format[i] != '\0'; i++)
 	{
-		if (*format == '%')
+		if (format[i] != '%')
 		{
-			format++;
-			printed = selector(format, args, printed);
-			format++;
+			buffer[printf_ind++] = format[i];
+			if (printf_ind == BUFF_SIZE)
+				printf_buffer(buffer, &printf_ind);
+			/* write(1, &format[i], 1);*/
+			printed_count++;
 		}
 		else
 		{
-			_putchar(*format);
-			printed++;
-			format++;
+			printf_buffer(buffer, &printf_ind);
+			flags = get_flags(format, &i);
+			width = get_width(format, &i, list);
+			precision = get_precision(format, &i, list);
+			size = get_size(format, &i);
+			++i;
+			printed = handle_print(format, &i, list, buffer,
+				flags, width, precision, size);
+			if (printed == -1)
+				return (-1);
+			printed_count += printed;
 		}
 	}
-	va_end(args);
-	return (printed);
+
+	printf_buffer(buffer, &printf_ind);
+
+	va_end(list);
+
+	return (printed_count);
 }
